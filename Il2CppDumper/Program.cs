@@ -3,9 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
-#if NETFRAMEWORK
-using System.Windows.Forms;
-#endif
 
 namespace Il2CppDumper
 {
@@ -17,11 +14,16 @@ namespace Il2CppDumper
         static void Main(string[] args)
         {
             config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
-            string il2cppPath = "D:\\Doc\\OldCodMDumps\\MetadataInHexEdit/codm1.0.35_libil2cpp.so";
-            string metadataPath = "D:\\Doc\\OldCodMDumps\\MetadataInHexEdit/global-metadata_codm.dat";
-            string outputDir = "D:\\Doc\\OldCodMDumps\\MetadataInHexEdit/";
-            /*
-            if (args.Length == 1)
+            string il2cppPath = null;
+            string metadataPath = null;
+            string outputDir = null;
+            
+            if( args.Length == 0)
+            {
+                ShowHelp();
+                return;
+            }
+            if (args.Length == 1 )
             {
                 if (args[0] == "-h" || args[0] == "--help" || args[0] == "/?" || args[0] == "/h")
                 {
@@ -56,13 +58,13 @@ namespace Il2CppDumper
                     }
                 }
             }
-            */
+            
             if (outputDir == null)
             {
                 outputDir = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            if (il2cppPath ==null || metadataPath == null)
+            if (il2cppPath == null || metadataPath == null)
             {
                 Console.WriteLine($"ERROR: file not found");
             }

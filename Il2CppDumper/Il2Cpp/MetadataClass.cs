@@ -69,11 +69,11 @@ namespace Il2CppDumper
         public int unresolvedVirtualCallParameterRangesOffset; // Il2CppRange
         public int unresolvedVirtualCallParameterRangesSize;
         public int windowsRuntimeTypeNamesOffset; // Il2CppWindowsRuntimeTypeNamePair
-        public int windowsRuntimeTypeNamesSize; //66 fields
+        public int windowsRuntimeTypeNamesSize;
     }
 
 
-    /*So far only 2 bytes shrink in codm*/
+    /* 2 bytes shrink */
     public class Il2CppAssemblyDefinition
     {   
         public int imageIndex;
@@ -101,7 +101,7 @@ namespace Il2CppDumper
     }
 
 
-     /* Fully modified for codm - 20 bytes*/
+     /* 20 bytes*/
     public class Il2CppImageDefinition
     {
         public uint nameIndex;
@@ -109,11 +109,11 @@ namespace Il2CppDumper
         public int typeStart;
         public uint typeCount;
         public int entryPointIndex;
-        //public int token //removed
+
     }
 
 
-    /* Fully modified for codm - 80 bytes*/
+    /* 80 bytes*/
     public class Il2CppTypeDefinition
     {
         public uint nameIndex;
@@ -157,13 +157,11 @@ namespace Il2CppDumper
         // 12 - ClassSize is default
         // 13-16 - One of nine possible PackingSize values (0, 1, 2, 4, 8, 16, 32, 64, or 128) - the specified packing size (even for explicit layouts)
         public ushort bitfield;
-        //public uint token; //removed
-
         public bool IsValueType => (bitfield & 0x1) == 1;
         public bool IsEnum => ((bitfield >> 1) & 0x1) == 1;
     }
 
-    /* Fully modified for codm - 42 bytes*/
+    /* 42 bytes */
     public class Il2CppMethodDefinition
     {
         public uint nameIndex;
@@ -171,10 +169,10 @@ namespace Il2CppDumper
         public int returnType;
         public int parameterStart;
         public uint token;
-        public short declaringType;
+        public ushort declaringType;
         public short customAttributeIndex;
         public short genericContainerIndex;
-        public ushort invokerIndex;//
+        public ushort invokerIndex;
         public short delegateWrapperIndex;
         public short rgctxStartIndex;
         public ushort rgctxCount;
@@ -185,27 +183,24 @@ namespace Il2CppDumper
     }
 
 
-    /* Fully modified for codm - 10 bytes*/
+    /* 10 bytes*/
     public class Il2CppParameterDefinition
     {
         public uint nameIndex;
-        //public uint token;
         public short customAttributeIndex;
         public int typeIndex;
     }
 
 
-    /* Fully modified for codm - 10 bytes*/
+    /* 10 bytes */
     public class Il2CppFieldDefinition
     {
         public uint nameIndex;
         public int typeIndex;
         public short customAttributeIndex;
-        //public uint token;
     }
 
 
-    /*Same in codm*/
     public class Il2CppFieldDefaultValue
     {
         public int fieldIndex;
@@ -214,7 +209,7 @@ namespace Il2CppDumper
     }
 
 
-    /* Fully modified for codm - 12 bytes*/
+    /* 12 bytes*/
     public class Il2CppPropertyDefinition
     {
         public uint nameIndex;
@@ -222,24 +217,22 @@ namespace Il2CppDumper
         public short set;
         public ushort attrs;
         public ushort customAttributeIndex;
-        //public uint token;
     }
 
-    /* Fully modified for codm - 4 bytes*/
+    /* 4 bytes*/
     public class Il2CppCustomAttributeTypeRange
     {
         public ushort start;
         public ushort count;
     }
 
-    /*Same in codm*/
     public class Il2CppMetadataUsageList
     {
         public uint start;
         public ushort count;
     }
 
-    /*Same in codm*/
+
     public class Il2CppMetadataUsagePair
     {
         public uint destinationIndex;
@@ -247,14 +240,12 @@ namespace Il2CppDumper
     }
 
 
-    /*Same in codm*/
     public class Il2CppStringLiteral
     {
         public uint length;
         public int dataIndex;
     }
 
-    /*Same in codm*/
     public class Il2CppParameterDefaultValue
     {
         public int parameterIndex;
@@ -262,7 +253,7 @@ namespace Il2CppDumper
         public int dataIndex;
     }
 
-    /* Fully modified for codm - 16 bytes*/
+    /* 16 bytes*/
     public class Il2CppEventDefinition
     {
         public uint nameIndex;
@@ -271,11 +262,10 @@ namespace Il2CppDumper
         public short remove;
         public short raise;
         public short customAttributeIndex;
-        //public uint token;
     }
 
 
-    /* Fully modified for codm - 12 bytes*/
+    /* 12 bytes*/
     public class Il2CppGenericContainer
     {
         /* index of the generic type definition or the generic method definition corresponding to this container */
@@ -288,7 +278,7 @@ namespace Il2CppDumper
     }
 
 
-    /* Fully modified for codm - 6 bytes*/
+    /* 6 bytes*/
     public class Il2CppFieldRef
     {
         public int typeIndex;
@@ -296,7 +286,7 @@ namespace Il2CppDumper
     }
 
 
-    /* Fully modified for codm - 14 bytes*/
+    /* 14 bytes*/
     public class Il2CppGenericParameter
     {
         public uint nameIndex;  /* Type or method this parameter was defined in. */
@@ -325,7 +315,6 @@ namespace Il2CppDumper
         public int typeIndex => rgctxDataDummy;
     }
 
-    /*Same for codm*/
     public class Il2CppRGCTXDefinition
     {
         public Il2CppRGCTXDataType type => (Il2CppRGCTXDataType)type_pre29;
