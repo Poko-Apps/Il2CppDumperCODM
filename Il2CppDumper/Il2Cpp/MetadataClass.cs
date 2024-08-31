@@ -75,7 +75,7 @@ namespace Il2CppDumper
 
     /* 2 bytes shrink */
     public class Il2CppAssemblyDefinition
-    {   
+    {
         public int imageIndex;
         public short customAttributeIndex;
         public int referencedAssemblyStart;
@@ -101,7 +101,7 @@ namespace Il2CppDumper
     }
 
 
-     /* 20 bytes*/
+    /* 20 bytes*/
     public class Il2CppImageDefinition
     {
         public uint nameIndex;
@@ -111,7 +111,6 @@ namespace Il2CppDumper
         public int entryPointIndex;
 
     }
-
 
     /* 80 bytes*/
     public class Il2CppTypeDefinition
@@ -131,11 +130,11 @@ namespace Il2CppDumper
         public short rgctxStartIndex;
         public short rgctxCount;
         public short genericContainerIndex;
-        public short eventStart;
-        public short propertyStart;
-        public short nestedTypesStart;
-        public short interfacesStart;
-        public short interfaceOffsetsStart;
+        public ushort eventStart;
+        public ushort propertyStart;
+        public ushort nestedTypesStart;
+        public ushort interfacesStart;
+        public ushort interfaceOffsetsStart;
         public ushort method_count;
         public ushort property_count;
         public ushort field_count;
@@ -191,7 +190,6 @@ namespace Il2CppDumper
         public int typeIndex;
     }
 
-
     /* 10 bytes */
     public class Il2CppFieldDefinition
     {
@@ -200,14 +198,12 @@ namespace Il2CppDumper
         public short customAttributeIndex;
     }
 
-
     public class Il2CppFieldDefaultValue
     {
         public int fieldIndex;
         public int typeIndex;
         public int dataIndex;
     }
-
 
     /* 12 bytes*/
     public class Il2CppPropertyDefinition
@@ -239,7 +235,6 @@ namespace Il2CppDumper
         public uint encodedSourceIndex;
     }
 
-
     public class Il2CppStringLiteral
     {
         public uint length;
@@ -264,7 +259,6 @@ namespace Il2CppDumper
         public short customAttributeIndex;
     }
 
-
     /* 12 bytes*/
     public class Il2CppGenericContainer
     {
@@ -277,14 +271,12 @@ namespace Il2CppDumper
         public short is_method;
     }
 
-
     /* 6 bytes*/
     public class Il2CppFieldRef
     {
         public int typeIndex;
         public short fieldIndex; // local offset into type fields
     }
-
 
     /* 14 bytes*/
     public class Il2CppGenericParameter
@@ -296,7 +288,6 @@ namespace Il2CppDumper
         public ushort num;
         public ushort flags;
     }
-
 
     public enum Il2CppRGCTXDataType
     {
@@ -320,6 +311,8 @@ namespace Il2CppDumper
         public Il2CppRGCTXDataType type => (Il2CppRGCTXDataType)type_pre29;
         public int type_pre29;
         public Il2CppRGCTXDefinitionData data;
+        [Version(Min = 27.2)]
+        public ulong _data;
     }
 
     public enum Il2CppMetadataUsage
@@ -333,4 +326,9 @@ namespace Il2CppDumper
         kIl2CppMetadataUsageMethodRef,
     };
 
+    public class Il2CppCustomAttributeDataRange
+    {
+        public uint token;
+        public uint startOffset;
+    }
 }

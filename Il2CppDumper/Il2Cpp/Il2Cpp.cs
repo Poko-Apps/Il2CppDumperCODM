@@ -17,14 +17,14 @@ namespace Il2CppDumper
         public ulong[] unresolvedVirtualCallPointers;
         private ulong[] fieldOffsets;
         public Il2CppType[] types;
-        private Dictionary<ulong, Il2CppType> typeDic = new Dictionary<ulong, Il2CppType>();
+        private readonly Dictionary<ulong, Il2CppType> typeDic = new();
         public ulong[] metadataUsages;
         private Il2CppGenericMethodFunctionsDefinitions[] genericMethodTable;
         public ulong[] genericInstPointers;
         public Il2CppGenericInst[] genericInsts;
         public Il2CppMethodSpec[] methodSpecs;
-        public Dictionary<int, List<Il2CppMethodSpec>> methodDefinitionMethodSpecs = new Dictionary<int, List<Il2CppMethodSpec>>();
-        public Dictionary<Il2CppMethodSpec, ulong> methodSpecGenericMethodPointers = new Dictionary<Il2CppMethodSpec, ulong>();
+        public Dictionary<int, List<Il2CppMethodSpec>> methodDefinitionMethodSpecs = new();
+        public Dictionary<Il2CppMethodSpec, ulong> methodSpecGenericMethodPointers = new();
         private bool fieldOffsetsArePointers;
         protected long metadataUsagesCount;
         public Dictionary<string, Il2CppCodeGenModule> codeGenModules;
@@ -52,12 +52,25 @@ namespace Il2CppDumper
         {
             if (codeRegistration != 0)
             {
+                var limit = 0x50000u; //TODO
                 if (Version >= 24.2)
                 {
                     pCodeRegistration = MapVATR<Il2CppCodeRegistration>(codeRegistration);
+                    if (Version == 31)
+                    {
+                        if (pCodeRegistration.genericMethodPointersCount > limit)
+                        {
+                            codeRegistration -= PointerSize * 2;
+                        }
+                        else
+                        {
+                            Version = 29;
+                            Console.WriteLine($"Change il2cpp version to: {Version}");
+                        }
+                    }
                     if (Version == 29)
                     {
-                        if (pCodeRegistration.genericMethodPointersCount > 0x50000) //TODO
+                        if (pCodeRegistration.genericMethodPointersCount > limit)
                         {
                             Version = 29.1;
                             codeRegistration -= PointerSize * 2;
@@ -66,7 +79,7 @@ namespace Il2CppDumper
                     }
                     if (Version == 27)
                     {
-                        if (pCodeRegistration.reversePInvokeWrapperCount > 0x50000) //TODO
+                        if (pCodeRegistration.reversePInvokeWrapperCount > limit)
                         {
                             Version = 27.1;
                             codeRegistration -= PointerSize;
@@ -76,7 +89,7 @@ namespace Il2CppDumper
                     if (Version == 24.4)
                     {
                         codeRegistration -= PointerSize * 2;
-                        if (pCodeRegistration.reversePInvokeWrapperCount > 0x50000) //TODO
+                        if (pCodeRegistration.reversePInvokeWrapperCount > limit)
                         {
                             Version = 24.5;
                             codeRegistration -= PointerSize;
@@ -107,7 +120,8 @@ namespace Il2CppDumper
         public virtual void Init(ulong codeRegistration, ulong metadataRegistration)
         {
             pCodeRegistration = MapVATR<Il2CppCodeRegistration>(codeRegistration);
-            if (Version == 27 && pCodeRegistration.invokerPointersCount > 0x50000) //TODO
+            var limit = 0x50000u; //TODO
+            if (Version == 27 && pCodeRegistration.invokerPointersCount > limit)
             {
                 Version = 27.1;
                 Console.WriteLine($"Change il2cpp version to: {Version}");
@@ -122,7 +136,7 @@ namespace Il2CppDumper
                     if (codeGenModule.rgctxsCount > 0)
                     {
                         var rgctxs = MapVATR<Il2CppRGCTXDefinition>(codeGenModule.rgctxs, codeGenModule.rgctxsCount);
-                        if (rgctxs.All(x => x.data.rgctxDataDummy > 0x50000))
+                        if (rgctxs.All(x => x.data.rgctxDataDummy > limit))
                         {
                             Version = 27.2;
                             Console.WriteLine($"Change il2cpp version to: {Version}");
@@ -131,7 +145,7 @@ namespace Il2CppDumper
                     }
                 }
             }
-            if (Version == 24.4 && pCodeRegistration.invokerPointersCount > 0x50000) //TODO
+            if (Version == 24.4 && pCodeRegistration.invokerPointersCount > limit)
             {
                 Version = 24.5;
                 Console.WriteLine($"Change il2cpp version to: {Version}");
@@ -245,6 +259,11 @@ namespace Il2CppDumper
         public T MapVATR<T>(ulong addr) where T : new()
         {
             return ReadClass<T>(MapVATR(addr));
+        }
+
+        public T[] MapVATR<T>(ulong addr, ulong count) where T : new()
+        {
+            return ReadClassArray<T>(MapVATR(addr), count);
         }
 
         public T[] MapVATR<T>(ulong addr, long count) where T : new()

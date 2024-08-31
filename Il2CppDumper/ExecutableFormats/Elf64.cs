@@ -29,7 +29,7 @@ namespace Il2CppDumper
                 FixedProgramSegment();
             }
             pt_dynamic = programSegment.First(x => x.p_type == PT_DYNAMIC);
-            dynamicSection = ReadClassArray<Elf64_Dyn>(pt_dynamic.p_offset, (long)pt_dynamic.p_filesz / 16L);
+            dynamicSection = ReadClassArray<Elf64_Dyn>(pt_dynamic.p_offset, pt_dynamic.p_filesz / 16L);
             if (IsDumped)
             {
                 FixedDynamicSection();
@@ -187,26 +187,25 @@ namespace Il2CppDumper
             {
                 var relaOffset = MapVATR(dynamicSection.First(x => x.d_tag == DT_RELA).d_un);
                 var relaSize = dynamicSection.First(x => x.d_tag == DT_RELASZ).d_un;
-                var relaTable = ReadClassArray<Elf64_Rela>(relaOffset, (long)relaSize / 24L);
+                var relaTable = ReadClassArray<Elf64_Rela>(relaOffset, relaSize / 24L);
                 foreach (var rela in relaTable)
                 {
                     var type = rela.r_info & 0xffffffff;
                     var sym = rela.r_info >> 32;
-                    switch (type)
+                    (ulong value, bool recognized) result = (type, elfHeader.e_machine) switch
                     {
-                        case R_AARCH64_ABS64:
-                            {
-                                var symbol = symbolTable[sym];
-                                Position = MapVATR(rela.r_offset);
-                                Write(symbol.st_value + (ulong)rela.r_addend);
-                                break;
-                            }
-                        case R_AARCH64_RELATIVE:
-                            {
-                                Position = MapVATR(rela.r_offset);
-                                Write(rela.r_addend);
-                                break;
-                            }
+                        (R_AARCH64_ABS64, EM_AARCH64) => (symbolTable[sym].st_value + rela.r_addend, true),
+                        (R_AARCH64_RELATIVE, EM_AARCH64) => (rela.r_addend, true),
+
+                        (R_X86_64_64, EM_X86_64) => (symbolTable[sym].st_value + rela.r_addend, true),
+                        (R_X86_64_RELATIVE, EM_X86_64) => (rela.r_addend, true),
+
+                        _ => (0, false)
+                    };
+                    if (result.recognized)
+                    {
+                        Position = MapVATR(rela.r_offset);
+                        Write(result.value);
                     }
                 }
             }

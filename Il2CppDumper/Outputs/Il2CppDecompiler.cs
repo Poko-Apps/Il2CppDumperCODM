@@ -9,16 +9,17 @@ namespace Il2CppDumper
 {
     public class Il2CppDecompiler
     {
-        private Il2CppExecutor executor;
-        private Metadata metadata;
-        private Il2Cpp il2Cpp;
-        private Dictionary<Il2CppMethodDefinition, string> methodModifiers = new Dictionary<Il2CppMethodDefinition, string>();
+        private readonly Il2CppExecutor executor;
+        private readonly Metadata metadata;
+        private readonly Il2Cpp il2Cpp;
+        private readonly Dictionary<Il2CppMethodDefinition, string> methodModifiers;
 
         public Il2CppDecompiler(Il2CppExecutor il2CppExecutor)
         {
             executor = il2CppExecutor;
             metadata = il2CppExecutor.metadata;
             il2Cpp = il2CppExecutor.il2Cpp;
+            methodModifiers = new();
         }
 
         public void Decompile(Config config, string outputDir)
@@ -50,7 +51,6 @@ namespace Il2CppDumper
                                 extends.Add(parentName);
                             }
                         }
-                           
                         if (typeDef.interfaces_count > 0)
                         {
                             for (int i = 0; i < typeDef.interfaces_count; i++)
@@ -59,7 +59,6 @@ namespace Il2CppDumper
                                 extends.Add(executor.GetTypeName(@interface, false, false));
                             }
                         }
-                        
                         writer.Write($"\n// Namespace: {metadata.GetStringFromIndex(typeDef.namespaceIndex)}\n");
                         if (config.DumpAttribute)
                         {
@@ -124,7 +123,7 @@ namespace Il2CppDumper
                                 var isConst = false;
                                 if (config.DumpAttribute)
                                 {
-                                    writer.Write(GetCustomAttribute(imageDef, fieldDef.customAttributeIndex, 0, "\t"));//force token 0 (NO_USE)
+                                    writer.Write(GetCustomAttribute(imageDef, fieldDef.customAttributeIndex, 0, "\t"));
                                 }
                                 writer.Write("\t");
                                 var access = fieldType.attrs & FIELD_ATTRIBUTE_FIELD_ACCESS_MASK;
@@ -209,7 +208,7 @@ namespace Il2CppDumper
                                 var propertyDef = metadata.propertyDefs[i];
                                 if (config.DumpAttribute)
                                 {
-                                    writer.Write(GetCustomAttribute(imageDef, propertyDef.customAttributeIndex, 0 , "\t"));
+                                    writer.Write(GetCustomAttribute(imageDef, propertyDef.customAttributeIndex, 0, "\t"));
                                 }
                                 writer.Write("\t");
                                 if (propertyDef.get >= 0)

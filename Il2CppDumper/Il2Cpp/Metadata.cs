@@ -16,13 +16,15 @@ namespace Il2CppDumper
         public Il2CppMethodDefinition[] methodDefs;
         public Il2CppParameterDefinition[] parameterDefs;
         public Il2CppFieldDefinition[] fieldDefs;
-        private Dictionary<int, Il2CppFieldDefaultValue> fieldDefaultValuesDic;
-        private Dictionary<int, Il2CppParameterDefaultValue> parameterDefaultValuesDic;
+        private readonly Dictionary<int, Il2CppFieldDefaultValue> fieldDefaultValuesDic;
+        private readonly Dictionary<int, Il2CppParameterDefaultValue> parameterDefaultValuesDic;
         public Il2CppPropertyDefinition[] propertyDefs;
         public Il2CppCustomAttributeTypeRange[] attributeTypeRanges;
+        public Il2CppCustomAttributeDataRange[] attributeDataRanges;
+        private readonly Dictionary<Il2CppImageDefinition, Dictionary<uint, int>> attributeTypeRangesDic;
         public Il2CppStringLiteral[] stringLiterals;
-        private Il2CppMetadataUsageList[] metadataUsageLists;
-        private Il2CppMetadataUsagePair[] metadataUsagePairs;
+        private readonly Il2CppMetadataUsageList[] metadataUsageLists;
+        private readonly Il2CppMetadataUsagePair[] metadataUsagePairs;
         public int[] attributeTypes;
         public int[] interfaceIndices;
         public Dictionary<Il2CppMetadataUsage, SortedDictionary<uint, uint>> metadataUsageDic;
@@ -36,7 +38,7 @@ namespace Il2CppDumper
         public uint[] vtableMethods;
         public Il2CppRGCTXDefinition[] rgctxEntries;
 
-        private Dictionary<uint, string> stringCache = new Dictionary<uint, string>();
+        private readonly Dictionary<uint, string> stringCache = new();
 
         public Metadata(Stream stream) : base(stream)
         {
@@ -53,11 +55,9 @@ namespace Il2CppDumper
             }
             Version = version;
             header = ReadClass<Il2CppGlobalMetadataHeader>(0);
-            
+
             imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesSize);
-            
             assemblyDefs = ReadMetadataClassArray<Il2CppAssemblyDefinition>(header.assembliesOffset, header.assembliesSize);
-            
             typeDefs = ReadMetadataClassArray<Il2CppTypeDefinition>(header.typeDefinitionsOffset, header.typeDefinitionsSize);
             methodDefs = ReadMetadataClassArray<Il2CppMethodDefinition>(header.methodsOffset, header.methodsSize);
             parameterDefs = ReadMetadataClassArray<Il2CppParameterDefinition>(header.parametersOffset, header.parametersSize);
@@ -75,18 +75,14 @@ namespace Il2CppDumper
             constraintIndices = ReadClassArray<int>(header.genericParameterConstraintsOffset, header.genericParameterConstraintsSize / 4);
             vtableMethods = ReadClassArray<uint>(header.vtableMethodsOffset, header.vtableMethodsSize / 4);
             stringLiterals = ReadMetadataClassArray<Il2CppStringLiteral>(header.stringLiteralOffset, header.stringLiteralSize);
-
             fieldRefs = ReadMetadataClassArray<Il2CppFieldRef>(header.fieldRefsOffset, header.fieldRefsSize);
-
             metadataUsageLists = ReadMetadataClassArray<Il2CppMetadataUsageList>(header.metadataUsageListsOffset, header.metadataUsageListsCount);
             metadataUsagePairs = ReadMetadataClassArray<Il2CppMetadataUsagePair>(header.metadataUsagePairsOffset, header.metadataUsagePairsCount);
             ProcessingMetadataUsage();
 
             attributeTypeRanges = ReadMetadataClassArray<Il2CppCustomAttributeTypeRange>(header.attributesInfoOffset, header.attributesInfoCount);
             attributeTypes = ReadClassArray<int>(header.attributeTypesOffset, header.attributeTypesCount / 4);
-
             rgctxEntries = ReadMetadataClassArray<Il2CppRGCTXDefinition>(header.rgctxEntriesOffset, header.rgctxEntriesCount);
-            
         }
 
         private T[] ReadMetadataClassArray<T>(uint addr, int count) where T : new()
@@ -121,7 +117,21 @@ namespace Il2CppDumper
 
         public int GetCustomAttributeIndex(Il2CppImageDefinition imageDef, int customAttributeIndex, uint token)
         {
-            return customAttributeIndex;
+            if (Version > 24)
+            {
+                if (attributeTypeRangesDic[imageDef].TryGetValue(token, out var index))
+                {
+                    return index;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                return customAttributeIndex;
+            }
         }
 
         public string GetStringLiteralFromIndex(uint index)
@@ -157,7 +167,7 @@ namespace Il2CppDumper
             metadataUsagesCount = metadataUsageDic.Max(x => x.Value.Select(y => y.Key).DefaultIfEmpty().Max()) + 1;
         }
 
-        public uint GetEncodedIndexType(uint index)
+        public static uint GetEncodedIndexType(uint index)
         {
             return (index & 0xE0000000) >> 29;
         }
@@ -204,19 +214,14 @@ namespace Il2CppDumper
             }
             return size;
 
-            int GetPrimitiveTypeSize(string name)
+            static int GetPrimitiveTypeSize(string name)
             {
-                switch (name)
+                return name switch
                 {
-                    case "Int32":
-                    case "UInt32":
-                        return 4;
-                    case "Int16":
-                    case "UInt16":
-                        return 2;
-                    default:
-                        return 0;
-                }
+                    "Int32" or "UInt32" => 4,
+                    "Int16" or "UInt16" => 2,
+                    _ => 0,
+                };
             }
         }
     }

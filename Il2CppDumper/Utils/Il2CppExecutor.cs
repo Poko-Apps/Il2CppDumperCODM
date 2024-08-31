@@ -10,7 +10,7 @@ namespace Il2CppDumper
     {
         public Metadata metadata;
         public Il2Cpp il2Cpp;
-        private static readonly Dictionary<int, string> TypeString = new Dictionary<int, string>
+        private static readonly Dictionary<int, string> TypeString = new()
         {
             {1,"void"},
             {2,"bool"},
@@ -37,11 +37,7 @@ namespace Il2CppDumper
         {
             this.metadata = metadata;
             this.il2Cpp = il2Cpp;
-
-            if (il2Cpp.Version < 27)
-            {
-                customAttributeGenerators = il2Cpp.customAttributeGenerators;
-            }
+            customAttributeGenerators = il2Cpp.customAttributeGenerators;
         }
 
         public string GetTypeName(Il2CppType il2CppType, bool addNamespace, bool is_nested)
@@ -104,7 +100,7 @@ namespace Il2CppDumper
                         var index = typeName.IndexOf("`");
                         if (index != -1)
                         {
-                            str += typeName.Substring(0, index);
+                            str += typeName[..index];
                         }
                         else
                         {
@@ -153,7 +149,7 @@ namespace Il2CppDumper
                 var index = typeName.IndexOf("`");
                 if (index != -1)
                 {
-                    typeName = typeName.Substring(0, index);
+                    typeName = typeName[..index];
                 }
                 if (genericParameter)
                 {
@@ -225,10 +221,11 @@ namespace Il2CppDumper
         public Il2CppRGCTXDefinition[] GetRGCTXDefinition(string imageName, Il2CppTypeDefinition typeDef)
         {
             Il2CppRGCTXDefinition[] collection = null;
+            
             if (typeDef.rgctxCount > 0)
             {
-                collection = new Il2CppRGCTXDefinition[typeDef.rgctxCount];
-                Array.Copy(metadata.rgctxEntries, typeDef.rgctxStartIndex, collection, 0, typeDef.rgctxCount);
+                    collection = new Il2CppRGCTXDefinition[typeDef.rgctxCount];
+                    Array.Copy(metadata.rgctxEntries, typeDef.rgctxStartIndex, collection, 0, typeDef.rgctxCount);
             }
             return collection;
         }
@@ -321,8 +318,10 @@ namespace Il2CppDumper
 
         public bool GetConstantValueFromBlob(Il2CppTypeEnum type, BinaryReader reader, out BlobValue value)
         {
-            value = new BlobValue();
-            value.il2CppTypeEnum = type;
+            value = new BlobValue
+            {
+                il2CppTypeEnum = type
+            };
             switch (type)
             {
                 case Il2CppTypeEnum.IL2CPP_TYPE_BOOLEAN:

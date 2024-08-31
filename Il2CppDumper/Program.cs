@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Il2CppDumper
 {
@@ -13,17 +13,12 @@ namespace Il2CppDumper
         [STAThread]
         static void Main(string[] args)
         {
-            config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
+            config = JsonSerializer.Deserialize<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
             string il2cppPath = null;
             string metadataPath = null;
             string outputDir = null;
-            
-            if( args.Length == 0)
-            {
-                ShowHelp();
-                return;
-            }
-            if (args.Length == 1 )
+
+            if (args.Length == 1)
             {
                 if (args[0] == "-h" || args[0] == "--help" || args[0] == "/?" || args[0] == "/h")
                 {
@@ -58,15 +53,42 @@ namespace Il2CppDumper
                     }
                 }
             }
-            
-            if (outputDir == null)
+            outputDir ??= AppDomain.CurrentDomain.BaseDirectory;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                outputDir = AppDomain.CurrentDomain.BaseDirectory;
+                if (il2cppPath == null)
+                {
+                    var ofd = new OpenFileDialog
+                    {
+                        Filter = "Il2Cpp binary file|*.*"
+                    };
+                    if (ofd.ShowDialog())
+                    {
+                        il2cppPath = ofd.FileName;
+                        ofd.Filter = "global-metadata|global-metadata.dat";
+                        if (ofd.ShowDialog())
+                        {
+                            metadataPath = ofd.FileName;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
             }
-
-            if (il2cppPath == null || metadataPath == null)
+            if (il2cppPath == null)
             {
-                Console.WriteLine($"ERROR: file not found");
+                ShowHelp();
+                return;
+            }
+            if (metadataPath == null)
+            {
+                Console.WriteLine($"ERROR: Metadata file not found or encrypted.");
             }
             else
             {
@@ -175,7 +197,7 @@ namespace Il2CppDumper
             try
             {
                 var flag = il2Cpp.PlusSearch(metadata.methodDefs.Count(x => x.methodIndex >= 0), metadata.typeDefs.Length, metadata.imageDefs.Length);
-                
+
                 if (!flag)
                 {
                     flag = il2Cpp.Search();
@@ -210,7 +232,6 @@ namespace Il2CppDumper
             var decompiler = new Il2CppDecompiler(executor);
             decompiler.Decompile(config, outputDir);
             Console.WriteLine("Done!");
-            
             if (config.GenerateStruct)
             {
                 Console.WriteLine("Generate struct...");
